@@ -75,6 +75,9 @@ the counting process for those. This file is sourced in the makefile, if [Data/C
 **[/Code/Regressions.R](/Code/Regressions.R):**
 This file runs different regression models to estimate the effects of SQFs on arrests in 2006.
 
+**Note:**  
+Some of the analysis was run on the University of Leipzig Computational Computation Cluster. It is not advised to run the analysis on your
+local mashine!
 
 ## [/Writing](/Writing)
 
@@ -85,7 +88,7 @@ The subdirectories Poster, Proposal, Slides and Term_Paper each include a .Rmd-f
 that is the latest version of the output. All other files in these subdirectories are caching-files.
 
 
-Note: 
+**Note:**  
 At the beginning of the project, it was planned to conduct an analysis for the years from
 2006 to 2011. In the process, the scale of the project had to be reduced to only 2006. This is why
 some scripts still compute statistics for all years. Later on, only 2006 is of interest. It was decided
