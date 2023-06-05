@@ -30,7 +30,7 @@ All other files in this directory are shape files of New York. These and the raw
 are loaded in Code/load_data.R.
 
 **/Data/Clean/:**
-- This sub-directory holds the cleaned data and saved results. 
+This sub-directory holds the cleaned data and saved results. 
 - /Data/Clean/data_arrest.R and Data/Clean/data_sqf.R hold the cleaned data sets for all years. 
 - /Data/Clean/n_sqf_all.R is a save of the numbers of SQFs per year before cleaning the data set.
 - /Data/Clean/data_final.Rds and /Data/Clean/data_final_long.Rds include the generated arrest
