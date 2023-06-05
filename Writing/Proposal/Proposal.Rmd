@@ -1,0 +1,210 @@
+---
+output: 
+  pdf_document:
+    extra_dependencies:
+      setspace: ["onehalfspacing"]
+      babel: ["USenglish"]
+      csquotes: ["autostyle=true"]
+      fancyhdr: []
+      lastpage: []
+      geometry: []
+      array: []
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+
+bibliography: ../Literatur.bib 
+csl: ../zfs.csl
+fontsize: 12pt
+toc-title: "Table of Contents"
+
+title: "\\thispagestyle{empty} \\vspace*{-2.5cm} \\hspace*{-3cm} \\includegraphics[width=4.2cm]{../Logo.png} \\hspace*{10cm} \\vspace*{1.8cm} \\linebreak Proposal: Crime Deterence and other \\hspace{15cm} Effects of SQFs on Arrests in New York City: \\hspace{15cm} A Spatial Analysis \\hspace{15cm} \\vspace*{0.1cm} \\linebreak \\hspace{15cm} \\large \\today"
+
+subtitle: " \\normalsize \\singlespacing Proposal for \\hspace{15cm} Term Paper in \\hspace{15cm} \\enquote{Spatial Econometrics} (07-202-1402)\\vspace*{0.3cm} \\linebreak Winter Semester 22/23 \\hspace{15cm} \\hspace{15cm} Jordan Michael Adamson, PhD \\hspace{15cm} Institute for Empirical Research in Econ. \\hspace{15cm} Department of Economics \\hspace{15cm} University of Leipzig \\vspace*{3cm} \\linebreak \\hspace{15cm} \\textbf{Handed in by:} \\hspace{15cm} Jonas Frost, Student-ID: 3738889 \\hspace{15cm} Cichoriusstraße 17, 04318 Leipzig \\hspace{15cm} jonas.frost@studserv.uni-leipzig.de \\vspace*{0.5cm} \\linebreak \\hspace{15cm} Master's Student of Sociology at \\hspace{15cm} Intitute for Sociology \\hspace{15cm} Department of Social Sciences and Philosophy \\hspace{15cm} University of Leipzig \\newpage"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_knit$set(root.dir = "C:/Users/frost/Documents/_UNI/_MA/3_Semester/Spatial_Econometrics/AA_Project_SpatEcon")
+knitr::opts_chunk$set(echo = FALSE, fig.width = 8, fig.height = 4, cache = TRUE)
+```
+
+```{r setup2, include = FALSE}
+source("Code/Makefile.R")
+theme_set(theme_bw())
+```
+
+```{=latex}
+\thispagestyle{empty}
+
+\newpage
+\setcounter{page}{1}
+\newgeometry{
+top=25mm,
+bottom=25mm,
+right= 30mm,
+left=30mm,
+headsep=6mm}
+\setlength{\headheight}{13.59999pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small Jonas Frost}
+\chead{\small Proposal: SQFs and Arrests in New York City}
+\rhead{\small{\rightmark}} 
+\lfoot{}
+\cfoot{}
+\rfoot{Page \thepage \ of \pageref{LastPage} \hspace{0.3cm}}
+
+```
+
+
+# Data
+
+The City of New York regularly publishes records of policing measures on their Open Data Platform^[https://opendata.cityofnewyork.us/]. These records include data on "Stop, Question and Frisk" activities (SQFs) and arrests. SQF data includes coordinates and timestamps as well as information on the poling acts carried out, whether the stop was inside or outside, information on the person stopped (sex, race, age) and whether the search resulted in the detection of a violation.  
+Similar data is available on arrests. In addition to geo-coordinates and date, the arrest data also include information on the arrested and on the crime that resulted in the arrest.  
+The following plot illustrates the densities of all SQFs and all Arrests that occurred in New York between 2006 and 2011.
+
+```{r plot_density, warning=FALSE}
+nyc_shape_owin <-
+    nyc_zip_shape_ll |>
+    st_transform(crs = 6345) |>
+    st_simplify(dTolerance = 50) |>
+    as.data.frame()
+
+arrests.ppp_all <- arrests.ppp[[1]]
+
+sqf.ppp_all <- sqf.ppp[[1]]
+
+density_arrests <- density.ppp(arrests.ppp_all)
+density_sqf <- density.ppp(sqf.ppp_all)
+
+
+gg1 <-
+  as.data.frame(density_arrests) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York Arrests 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+
+gg2 <- as.data.frame(density_sqf) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York SQFs 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+plot_grid(
+    gg1,
+    gg2,
+    ncol = 2
+    ) +
+  theme( plot.margin = margin(1, 1, 1, 1, "cm"),
+         plot.background = element_rect(color = "black")) 
+
+```
+
+Thus, the paper will be based on two spatial point patterns. The SQF dataset contains `r format(nrow(data_sqf), big.mark = ",")` data points, while there is data on `r format(nrow(data_arrest), big.mark=",")` arrests. In addition to the spatial dimension of the data, the temporal dimension must also be considered. The following table shows the amounts of arrests and SQFs per year. While the amount of arrests is more or less stable at around 400,000 arrests per year, the number of SQFs increased from around 500,000 a year up to almost 700,000 a year.
+\newpage  
+  
+  
+
+```{r table_n}
+data_arrest |>
+  group_by(year(ARREST_DATE)) |>
+  summarise(`N Arrests` = dplyr::n()) |>
+  rename(year = `year(ARREST_DATE)`) |>
+  left_join(y = n_sqf_all, by = "year") |>
+  rename(`N SQFs` = n_all) |>
+  as.data.frame() |>
+  mutate(across(starts_with("N"), ~format(., big.mark = ","))) |>
+  gt() |>
+  tab_options(
+    column_labels.padding.horizontal = 20,
+    data_row.padding.horizontal = 15,
+    stub.border.width = 2,
+    table_body.hlines.color = "black",
+    stub.border.color = "black",
+    table_body.border.bottom.color = "black",
+    heading.border.bottom.color = "black",
+    column_labels.border.top.color = "black",
+    column_labels.border.bottom.color = "black",
+    table.border.top.color = "black"
+  ) |>
+  tab_header("Number of Cases per Year")
+```
+
+
+# Research Question
+
+The proposed paper will pursue the question whether SQFs have a deterring effect on crime.  
+The (highly controversial) use of SQFs as a proactive policing strategy is explicitly based on the Broken Windows Theory [@Fagan.2000]. The Broken Widows Hypothesis can be traced back to @Wilson.1982. Its basic idea is best summarized as "disorder leads to more disorder". Therefore, SQFs should deter criminal activity by removing disorder. In addition to that, police presence in an area (which is signalled by an SQF) shifts potential criminals' assessments of the probability of being caught. Hypotheses H1 follows:
+
+  *H1: An SQF leads to a lesser number of arrests in a contained area of space and time.*
+
+# Proposed Methods
+
+Firstly, the two point patterns will be described regarding their clustering and the distances between SQFs and arrests. To analyse if arrests are clustered/anti-clustered around SQFs, a cross-type K-funktion will be computed [see @Baddeley.2016, 594ff.].
+
+
+```{r Kcross, fig.height=6}
+load("Data/Clean/Kcross_save.R")
+
+for (i in 1:6) {
+  K1 <- Kcross[[i]]
+  year <- 2005 + i
+  
+  gg[[i]] <-
+    ggplot(mapping = aes(x = r)) +
+    geom_line(mapping = aes(y = K1$iso, color = "Kcross")) +
+    geom_line(mapping = aes(y = K1$theo, color = "pois."), linetype = "dashed") +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    xlab("Distance in meters") +
+    ylab("K-hat") +
+    scale_color_manual(values = c("Kcross" = "blue", "SQFs" = "red", "pois." = "black"), name = "") +
+    theme_bw() +
+    labs(title = paste0("Kcross ", year)) +
+    theme(legend.position = c(0.3, 0.8), legend.title = element_blank())
+}
+
+clustering_plot <-
+  plot_grid(
+    gg[[1]],
+    gg[[2]],
+    gg[[3]],
+    gg[[4]],
+    gg[[5]],
+    gg[[6]]
+  )
+
+clustering_plot
+```
+
+A major issue with this direct method is that the temporal dimension remains unconsidered. In the cross-type K-function, no difference is made between arrests that occurred before and after an SQF. Therefore, the deterring effect of an SQF (which could be very limited in time) could be covered by trends in arrests long after the actual SQF.  
+Hence, multiple factors make it hard to test H1 and even harder to interpret results as causal. One aspect that has to be considered is that SQFs and arrests are not independent. The police plan and perform more SQFs in crime hot spots, where in return arrests rates are high. Additionally, SQFs may lead to arrests, e.g. when illegal contraband was found. Secondly, when only looking at developments of arrest rates in the circumference of SQFs, general independent trends in arrest rates will be ignored and attributed to the SQF. One must therefore also look at non-events to generate a control.  
+To make causal interpretations possible, a Difference-in-Difference (DiD) design will be proposed [see @Angrist.2009]:
+\newpage
+
+1. For every SQF the amount of arrests that fall into in a spatial buffer 5 days before and 5 days after the SQF will be computed.
+2. The same will be done for a number of randomly generated (poisson distribution) points. These points are then considered the counterfactual control group. 
+3. First differences: The differences between the amount of arrests after and the amount of arrests before the (non-)SQF.
+4. Second difference: The (mean) difference of the first differences (on a given day and/or average over all days?).
+
+To be able to account for other control variables, such as if there were other SQFs in close distance or regional fixed-effects, a (linear) random intercept and random slope regression model will be proposed:
+
+$$
+y_{ij} = \beta_{0j} + \beta_{1j} \ x_{ij} + \beta_{2j} \ r_{ij} + \beta_{3j} \ q_{ij} + \epsilon_{ij} \\
+$$
+
+where the difference of arrests after and before the SQF ($y_{ij}$) will be estimated by $x, r$ and $q$. $x$ stands for the dummy splitting random points from actual SQFs, $r$ is the amount of other SQFs in the buffer, and $q$ the number of arrests before the SQF. The estimation will account for $1,...,i$ SQFs in $1,...,j$ subregions (e.g. zip-codes). 
+
+\newpage
+ 
+
+# Literature

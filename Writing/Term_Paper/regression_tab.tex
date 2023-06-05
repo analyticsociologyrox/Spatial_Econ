@@ -1,0 +1,42 @@
+
+\begin{table}[!htbp] \centering 
+  \caption{Random-effects regression models} 
+  \label{} 
+\footnotesize 
+\begin{tabular}{@{\extracolsep{4pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & \multicolumn{3}{c}{Number of Arrests \vspace*{0.2cm}} \\ 
+ & in 1km radius & in 5km radius & in 10km radius \\ 
+\hline \\[-1.8ex] 
+ Intercept & 3.894$^{***}$ & 78.386$^{***}$ & 251.131$^{***}$ \\ 
+  & (0.101) & (0.823) & (1.966) \\ 
+  & & & \\ 
+ Other SQFs & 0.001$^{***}$ & 0.003$^{***}$ & 0.010$^{***}$ \\ 
+  & (0.00001) & (0.00003) & (0.00004) \\ 
+  & & & \\ 
+ After Event & 0.006 & 0.010 & $-$0.005 \\ 
+  & (0.142) & (1.152) & (2.762) \\ 
+  & & & \\ 
+ SQF or Control & 7.791$^{***}$ & 66.824$^{***}$ & 122.203$^{***}$ \\ 
+  & (0.017) & (0.135) & (0.262) \\ 
+  & & & \\ 
+ SQF*After & $-$0.083$^{***}$ & $-$0.121$^{***}$ & $-$0.625$^{***}$ \\ 
+  & (0.004) & (0.015) & (0.027) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Interaction/Intercept & -0.021 & -0.002 & -0.002 \\ 
+Observations & 13 455 540 & 13 455 540 & 13 455 540 \\ 
+R$^{2}$ & 0.017 & 0.020 & 0.021 \\ 
+Adjusted R$^{2}$ & 0.017 & 0.020 & 0.021 \\ 
+F Statistic & 232 092.700$^{***}$ & 270 634.300$^{***}$ & 290 951.700$^{***}$ \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{l}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{l}{All models are fitted using OLS random-effects} \\ 
+ & \multicolumn{3}{l}{accounting for the clustering of considered} \\ 
+ & \multicolumn{3}{l}{days per event.} \\ 
+\end{tabular} 
+\end{table} 

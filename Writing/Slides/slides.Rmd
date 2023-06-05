@@ -1,0 +1,403 @@
+---
+title: "Detterent Effects of SQFs on Arrests in New York City: A Spatial Analysis for 2006"
+author:
+  - Jonas Frost
+institute: 
+  - jonas.frost@studserv.uni-leipzig.de \linebreak Master's Student at Institute for Sociology \linebreak Departement of Social Sciences and Philosophy \linebreak University of Leipzig \normalsize
+date: "`r format(Sys.time(), '%d.%m.%Y')`"
+output:
+    beamer_presentation:
+      theme: "Frankfurt"
+      color: "dolphin"
+      slide_level: 2
+bibliography: ../Literatur.bib 
+csl: ../zfs.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, echo = FALSE, fig.height = 5)
+knitr::opts_knit$set(root.dir = "~/_UNI/_MA/3_Semester/Spatial_Econometrics/AA_Project_SpatEcon")
+```
+
+```{r data, cache=FALSE, include=FALSE}
+source("Code/Makefile.R")
+theme_set(theme_bw())
+```
+
+# Background
+
+## Motivation
+
+  * NYPD claims Stop, Question and Frisks (SQFs) deter crime
+  * SQFs are highly controversial because of racial profiling and police violence allegations
+  * In 2013 federal court ruled SQF tactics in New York had to be changed $\rightarrow$ numbers drastically decreased
+  * Question remains: Did SQFs deter crime? 
+
+## The current study's features
+
+  * Spatial analyses of all New York SQFs and arrests in 2006
+  * Micro-econometric design at the level of individual SQFs 
+  * Computationally intensive approach 
+  * Trying to close in on casual inference
+
+# Theory
+
+## Considerations
+
+ * SQFs are based on **broken windows hypothesis** [@Fagan.2000; @Wilson.1982]
+ * SQFs might change criminal's assesments of probability of being caught
+ * Effect could be detering or displacing
+ * Crime is clustered at specific locations
+
+## Theoretic Model
+
+\small
+
+  * $U(c \mid \ell_i)$: Utility of crime at location $i$
+  * $C(c \mid \ell_i)$: Cost of crime at location $i$
+  * $p_{\ell_i}$: Probability of being caught at location $i$
+  * $U(\neg c \mid \ell_i)$: Utility of not choosing crime at location $i$
+  * $C(\neg c \mid \ell_i)$: Cost of not choosing crime at location $i$
+  * $(N_{sqf} \mid \ell_i, t)$: Number of SQFs at location $i$ and time $t$
+  * $(N_c \mid \ell_i, t)$: Number of crimes at location $i$ and time $t$
+
+\normalsize
+
+### Decision Model
+$$
+U(c \mid \ell_i) - C(c \mid \ell_i) \cdot p_{\ell_i} \  > \ U(\neg c \mid \ell_i) - C(\neg c \mid \ell_i)
+$$
+$$
+p_{\ell_i} \ = \ f((N_{sqf} \mid \ell_i, t), \ (N_c \mid \ell_i, t), \ \boldsymbol{\cdot} \ )
+$$
+
+## Hypothesis
+
+### Deterrence Hypothesis
+
+An SQF leads to a lesser number of arrests in a contained area of space and time.
+
+# Data
+
+## Data
+
+  * Data with geo-coordinates of SQFs and arrests in 2006 aquired from \color{blue} [New York City's open data platform](https://opendata.cityofnewyork.us/) \color{black}
+  
+```{r density_map}
+nyc_shape_owin <-
+    nyc_zip_shape_ll |>
+    st_transform(crs = 6345) |>
+    st_simplify(dTolerance = 25) |>
+    as.data.frame()
+
+density_arrests <- density.ppp(arrests.ppp[[1]])
+density_sqf <- density.ppp(sqf.ppp[[1]])
+
+
+gg1 <-
+  as.data.frame(density_arrests) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "Kernel Density:\nNew York Arrests 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+
+gg2 <- as.data.frame(density_sqf) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "Kernel Density:\nNew York SQFs 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+plot_grid(
+    gg1,
+    gg2,
+    ncol = 2
+    ) +
+  theme(plot.margin = margin(1, 1, 1, 1, "cm"),
+        plot.background = element_rect(color = "black"))
+
+```
+
+## Data
+
+```{r time, message=FALSE}
+tmp1 <-
+  data_arrest |>
+  filter(ARREST_DATE < "2007-01-01",
+         ARREST_DATE >= "2006-01-01") |>
+  count(ARREST_DATE) |>
+  mutate(from = "arrests") |>
+  rename(date = ARREST_DATE)
+
+tmp2 <-
+  data_sqf |>
+  filter(datestop < "2007-01-01",
+         datestop >= "2006-01-01") |>
+  count(datestop) |>
+  mutate(from = "SQFs") |>
+  rename(date = datestop)
+
+tmp <- bind_rows(tmp1, tmp2)
+
+more_arrests <-
+  tmp |>
+  group_by(date) |>
+  filter(n == max(n)) |>
+  ungroup() |>
+  count(from) 
+```
+
+  * `r nrow(filter(data_final, is_sqf == 1))` SQFs and `r nrow(filter(data_arrest, ARREST_DATE < "2007-01-01", ARREST_DATE >= "2006-01-01"))` arrests were included in the analyses
+  * only `r more_arrests$n[1]` days in 2006 with more arrests than SQFs
+  * Amounts of SQFs and arrests follow a temporal periodicity $\rightarrow$ number of arrests might decrease after SQF because of this periodicity only
+
+```{r time_plot, message=FALSE}
+ggplot(tmp,
+       aes(x = date,
+           y = n,
+           color = from)) +
+  geom_smooth(linewidth = 0.8) +
+  geom_line() +
+  ylab("amount") +
+  scale_color_manual(name = "", 
+                     values = c("SQFs" = "brown3",
+                                "arrests" = "cornflowerblue")) +
+  labs(title = "number of SQFs and arrests over time")
+```
+
+# Methods
+
+## Methods
+
+  * Ripley's Cross K-function
+    + are arrests spatially (anti-)clustered around SQFs?
+  * Micro-econometric analysis at level of individual SQFs
+    + count amount of arrests in buffer around each SQF
+    + varying time from -10 to +10 days from the event
+    + varying buffer radius of 1km, 5km and 10km
+    + poisson point process with 500 points per day as random control events
+    + redo arrest counts for random control
+    
+## Micro-econometric Design
+
+
+```{r map_buffer, warning=FALSE, fig.height=6}
+points_sqf_ll <- 
+  data_final |>
+  filter(datestop == "2006-03-10") |>
+  # sample_n(800) |>
+  mutate(across(.cols = ends_with("coord"),.fns = as.numeric),
+         geometry = st_multipoint(as.matrix(cbind(xcoord, ycoord))),
+         is_sqf = factor(is_sqf,
+                         levels = c("1", "0"),
+                         labels = c("SQF", "Control"))
+  ) |>
+  # select(geometry) |>
+  st_as_sf(coords = c("xcoord","ycoord"), crs = st_crs("WGS84"))
+
+points_arrests_ll <-
+  data_arrest |>
+  filter(ARREST_DATE == "2006-03-10") |>
+  sample_n(800) |>
+  select(Longitude, Latitude) |>
+  na.omit() |>
+  as.matrix() |>
+  st_multipoint() |>
+  st_sfc(crs = st_crs("WGS84"))
+
+manhattan_ll <- 
+  nyc_shape_ll |>
+  filter(BoroName == "Manhattan")
+
+gg1 <-
+  ggplot() +
+  geom_sf(data = nyc_shape_ll, fill = "white") +
+  geom_sf(data = points_sqf_ll,
+          aes(color = as.factor(is_sqf))) +
+  labs(color = "") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+        legend.position = "bottom") +
+  labs(title = "(1) SQFs and Control Events on 2006-03-10")
+
+this_sqf <- points_sqf_ll[57,]
+buffer <- buffer_sqf <- st_buffer(this_sqf, dist = 1000)
+
+gg2 <-
+  ggplot() +
+  geom_sf(data = manhattan_ll, fill = "white") +
+  geom_sf(data = buffer, color = "red", fill = "white") +
+  geom_sf(data = this_sqf, color = "red") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=0.5)) +
+  labs(title = "(2) 1km Buffer around each Event")
+
+int_2006 <- st_intersection(buffer, points_arrests_ll)
+
+gg3 <-
+  ggplot() +
+  geom_sf(data = manhattan_ll, fill = "white") +
+  geom_sf(data = buffer, color = "red", fill = "white") +
+  geom_sf(data = int_2006, alpha = 0.5) +
+  geom_sf(data = this_sqf, color = "red") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=0.5)) +
+  labs(title = "(3) Count number of Arrests in Buffer")
+
+gg1
+
+```
+
+## Micro-econometric Design
+
+```{r manhattan_plot, cache=FALSE, fig.height=6}
+plot_grid(
+  gg2,
+  gg3
+)
+```
+
+# Results
+
+## Cross K-function
+
+  * "The expected number of *arrests* lying within a distance r of a typical *SQF*, standardised by dividing by the intensity of *arrests*" [@Baddeley.2016: 594]
+
+```{r k_cross, fig.height=3}
+K1 <- Kcross[[1]]
+
+ggplot(mapping = aes(x = r)) +
+    geom_line(mapping = aes(y = K1$iso, color = "K-Cross")) +
+    geom_line(mapping = aes(y = K1$theo, color = "CSR"), linetype = "dashed") +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    xlab("Distance in meters") +
+    ylab("K-hat") +
+    scale_color_manual(values = c("K-Cross" = "cornflowerblue", "CSR" = "black"), name = "") +
+    theme_bw() +
+    labs(title = paste0("Cross K-function for Arrests and SQFs in 2006")) +
+    theme(legend.position = c(0.3, 0.8), legend.title = element_blank())
+```
+
+  * Arrests are highly clustered around SQFs
+  * Problem: this approach **doesn't consider time**
+  * Possible interpretation: there are crime hot spots, where arrests and SQFs are clustered together
+
+## Micro Approach
+
+  * More arrests around SQFs then around random points
+  * No change in number of arrests around random control events
+  * Number of arrests before and after SQFs are barely different
+
+```{r box_plots, cache=TRUE}
+ylim1 <- boxplot.stats(filter(data_final_long, dist == 1) |>
+                         pull(arrests))$stats[c(1, 5)]
+ylim5 <- boxplot.stats(filter(data_final_long, dist == 5) |>
+                         pull(arrests))$stats[c(1, 5)]
+ylim10 <- boxplot.stats(filter(data_final_long, dist == 10) |>
+                          pull(arrests))$stats[c(1, 5)]
+
+data_final_long |>
+  filter(time_to_sqf >= -10,
+         time_to_sqf <= 10,
+         dist == 1 & arrests <= ylim1[2] |
+           dist == 5 & arrests <= ylim5[2] |
+           dist == 10 & arrests <= ylim10[2]) |>
+  mutate(dist = as.factor(dist) |>
+           recode("1" = "1km",
+                  "5" = "5km",
+                  "10" = "10km")) |>
+  ggplot(
+    mapping = aes(
+      x = factor(time_to_sqf, levels = as.character(c(-10:10))),
+      fill = is_sqf,
+      y = arrests
+    )) +
+  geom_boxplot(notch = TRUE, outlier.shape = NA) +
+  geom_vline(xintercept = "0", color = "brown3") +
+  scale_x_discrete(breaks = as.character(c(-10:10)), drop = FALSE) +
+  labs(title = "Number of arrests in radius around SQF and random points") +
+  guides(shape = "none") +
+  xlab("Days to/from SQF") +
+  ylab("Number of Arrests") +
+  scale_fill_manual(name = "",
+                    values = c("0" = "cornflowerblue",
+                               "1" = "brown3"),
+                    labels = c("CSR", "SQF")) +
+  theme_bw() +
+  facet_grid(vars(dist), scales = "free_y") +
+  theme(legend.position = "bottom") +
+  labs(subtitle = "Outliers removed for better display.")
+
+```
+
+## Micro Approach
+
+```{r regression_tab, message=FALSE, warning=FALSE, include=FALSE}
+tab <-
+  stargazer(
+    lmer_fit_1,
+    lmer_fit_5,
+    lmer_fit_10,
+    lmer_fit_all,
+    header = FALSE,
+    digit.separator = " ",
+    intercept.top = TRUE,
+    intercept.bottom = FALSE,
+    no.space = FALSE,
+    column.sep.width = "3pt",
+    omit.stat = "ll",
+    font.size = "tiny",
+    dep.var.labels = "Number of Arrests",
+    covariate.labels = c("Intercept", "Time to Event", "Other SQFs", "After Event", "SQF or Control", "SQF*After"),
+    notes.append = TRUE,
+    notes = c("All models are fitted using OLS fixed-effects for the 5 boroughs of New York.", "Model with all radii of observation includes additional fixed-efffects for radii.", "Full dataset was sampled to include 50000 events."),
+    notes.align = "l",
+    column.labels = c("in 1km radius", "in 5km radius", "in 10km radius", "in all radii"),
+    model.names = FALSE,
+    model.numbers = FALSE
+  )
+
+tab <- sub('^.+\\caption.+$','', tab)
+tab <- sub('^.+\\label.+$','', tab)
+```
+
+```{r regression_tab2, cache=FALSE, results='asis'}
+cat(tab, sep = "\n")
+```
+
+## Conclusion
+
+  * Deterring effects of SQFs on arrests are not stable throughout all observed spatial windows
+  * Found effects stay small
+
+
+# Discussion
+
+## Forthcomings
+
+  * Other authors [@Weisburd.2015; @Rosenfeld.2017] find similarly small deterring effects of SQFs 
+  * Attempt to estimate effects of individual SQFs instead of looking at effects at fixed spatial windows
+  * Control for temporal and spatial variance
+  * Randomly generated control group
+
+## Limitations
+
+  * Effects between arrest rates and SQF rates cannot be fully entangled
+  * Arrest rates only a vague measurement of crime $\rightarrow$ many other unconsidered factors influence arrest rates
+  
+\vspace*{1cm}
+
+### Conclusion
+Though the current investigation is limited in its interpretation, the NYPDs and other proponents claim that SQF practices effectively deter crime cannot be supported.
+
+## References
+
+\small

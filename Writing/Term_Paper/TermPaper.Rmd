@@ -1,0 +1,769 @@
+---
+output: 
+  bookdown::pdf_document2:
+    extra_dependencies:
+      setspace: ["onehalfspacing"]
+      babel: ["USenglish"]
+      csquotes: ["autostyle=true"]
+      inputenc: ["utf8"]
+      fancyhdr: []
+      lastpage: []
+      geometry: []
+      array: []
+      placeins: []
+      appendix: ["toc,page,header"]
+      minitoc: ["dotted"]
+      dsfont: []
+      amsmath: []
+    toc: no
+    number_sections: yes
+bibliography: ../Literatur.bib 
+csl: ../zfs.csl
+fontsize: 12pt
+toc-title: "Table of Contents"
+indent: yes
+link-citations: yes
+
+title: "\\thispagestyle{empty} \\vspace*{-2.5cm} \\hspace*{-3cm} \\includegraphics[width=4.2cm]{../Logo.png} \\hspace*{10cm} \\vspace*{1.8cm} \\linebreak Deterrent Effects of SQFs on Arrests in New York City: \\hspace{15cm} A Spatial Analysis for 2006 \\hspace{15cm} \\vspace*{0.1cm} \\linebreak \\hspace{15cm} \\large \\today"
+
+subtitle: " \\normalsize \\singlespacing Term Paper in \\hspace{15cm} \\enquote{Spatial Econometrics} (07-202-1402)\\vspace*{0.3cm} \\linebreak Winter Semester 22/23 \\hspace{15cm} \\hspace{15cm} Jordan Michael Adamson, PhD \\hspace{15cm} Institute for Empirical Research in Econ. \\hspace{15cm} Department of Economics \\hspace{15cm} University of Leipzig \\vspace*{3cm} \\linebreak \\hspace{15cm} \\textbf{Handed in by:} \\hspace{15cm} Jonas Frost, Student-ID: 3738889 \\hspace{15cm} Cichoriusstraße 17, 04318 Leipzig \\hspace{15cm} jonas.frost@studserv.uni-leipzig.de \\vspace*{0.5cm} \\linebreak \\hspace{15cm} Master's Student of Sociology at \\hspace{15cm} Intitute for Sociology \\hspace{15cm} Department of Social Sciences and Philosophy \\hspace{15cm} University of Leipzig \\newpage"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_knit$set(root.dir = "~/_UNI/_MA/3_Semester/Spatial_Econometrics/AA_Project_SpatEcon")
+knitr::opts_chunk$set(echo = FALSE, fig.width = 8, fig.height = 4, cache = TRUE)
+```
+
+```{r setup2, include = FALSE, cache = FALSE}
+source("Code/Makefile.R")
+theme_set(theme_bw())
+```
+
+```{=latex}
+\renewcommand \thepart{}
+\renewcommand \partname{}
+
+\doparttoc
+\faketableofcontents
+\dopartlot
+\fakelistoftables
+\dopartlof
+\fakelistoffigures
+\noptcrule
+
+\thispagestyle{empty}
+\vspace*{-3cm}
+\part{}
+\parttoc
+
+\newpage
+\thispagestyle{empty}
+
+\partlof
+\vspace*{1cm}
+\partlot
+
+\vfill
+```
+
+\noindent \textbf{Abstract:}  
+What effects did Search Question and Frisk tactics (SQFs) of the NYPD have on crime in 2006? Geo-data for all 2006 SQFs and arrests in New York City were analysed to find deterrent effects of SQFs on arrests. A novel difference-in-difference method was proposed. The number of arrests before and after each SQF in a spatial area of 1, 5 and 10km for all days from 10 days before to 10 days after the event were computed. Random points were used as a control. Small deterrent effects of SQFs were found. SQFs decreased the number of arrests in all of the defined spatial windows even when conditioning on the amount of other SQFs in an area. The found effects are statistically significant but the effect sizes are negligible. The claim that SQF tactics efficiently deter crime couldn't be supported.
+
+\vspace*{0.3cm}  
+
+\noindent \textbf{Acknowledgements:}  
+Computations for this work were done (in part) using resources of the Leipzig University Computing Center.
+
+```{=latex}
+\vspace*{2cm}
+
+\newpage
+\setcounter{page}{1}
+\newgeometry{
+top=25mm,
+bottom=25mm,
+right= 30mm,
+left=30mm,
+headsep=6mm}
+\setlength{\headheight}{13.59999pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small Jonas Frost}
+\chead{}
+\rhead{\small{\rightmark}} 
+\lfoot{}
+\cfoot{}
+\rfoot{Page \thepage \ of \pageref{LastPage} \hspace{0.3cm}}
+```
+
+# Introduction
+
+Stop, Question and Frisk (SQF) practices have been a highly controversial policing tool used by the New York Police Department (NYPD) and other police departments across the US, ever since they were found legal in the 1968 case of *Terry v. Ohio*. SQFs, therefore also known as *Terry* stops, are described as a short detention ("stop") and  questioning, possibly accompanied by a pat-down for weapons ("frisk") of a person based on reasonable suspicion [@White.2016, 18]. Reasonable suspicion, in legal jargon, is less urgent than a probable cause and is entirely determined by the police officer's judgment.  
+
+While the Supreme Court ruled in 1968 that searches without a probable cause were legal under certain conditions to protect officers, e.g. when the searched is suspected to be armed or dangerous, the NYPD has frequently used SQFs as a proactive policing strategy to detect and deter crime. Due to the NYPD's excessive use of SQFs and allegations of racial profiling and police violence, federal court declared SQFs as they were practiced to be unconstitutional and mandated substantive reforms in 2013.  
+
+Today, the number of SQFs has declined significantly and the NYPD doesn't rely on them as a proactive policing strategy anymore. Nevertheless, it is of interest for policy makers, police administrators and researchers to examine how SQFs influenced the emergence of crime. Since SQFs didn't contribute much to the detection of potential criminals or the removal of illegal weapons from the streets [see @Rosenfeld.2014; @White.2016], it is of special interest to determine if such a controversial policing tactic was justifiable by its effectiveness in deterring crime.
+
+This paper examines whether SQFs have a deterrent effect on crime. Therefore, the spatial effects of SQFs on arrests in New York City in 2006 will be analysed. Data on all SQF and arrest locations in New York in 2006 will be included in the analysis. A novel micro-econometric approach will be proposed and implemented to estimate effects of individual SQFs. This method will attempt to advance toward casual inference by using a difference-in-difference design. Accordingly, a random control group will be generated and a before and after comparison will be conducted.  
+
+In the following, a brief overview of the current state of the literature on effects of SQFs will be presented. Then, theoretic considerations and modelling will lead to the derivation of a hypothesis. Next, the used data will be introduced and the methodological approaches will be illustrated. Lastly, the empirical results will be presented and their implications will be discussed. 
+
+# Literature Review
+
+Because of the controversies surrounding SQFs, such as allegations of racial profiling and increased police violence, SQFs have been the subject of a number of scientific publications.  
+
+@Hanink.2013 investigated SQF rates in predefined police precincts. He found that SQF rates are highly correlated with crime. The higher the crime rate in a given precinct, the more SQFs are conducted. In addition to that, the ethnic and economic composition of the population of a precinct also influenced its number of SQFs even when conditioning on differences in crime rates. Poor communities with ethnic backgrounds were subject to more SQFs.  
+
+@Weisburd.2014 investigated possible reasons for the dramatic decrease of crime rates in New York City in the first decade of the 21$^{\mathrm{st}}$ century. They describe that even though the whole USA experienced a downward trend in crime rates, New York has witnessed a decline twice as large. By comparing aggregate level statistics of New York to other US cities they try to rule out a number of possible explanations. For example, the authors show that the number of police officers didn't increase in the observed time frame. Rather, the amount of police officers is positively correlated with the crime rate. That is why @Weisburd.2014 argue that the NYPD's novel policing tactics are a possible explanation for the above average crime decrease. In the time of the decline, numbers of SQFs drastically increased. The authors conducted an analysis on the scale of street segments by comparing crime rates and SQF numbers. They found that segments with high numbers of SQFs also have a high number of crime incidents. They conclude that SQFs were used as a hot-spot policing tactic that might have played a role in New York's crime rate decline.  
+
+A following paper by @Weisburd.2015 tried to further investigate the relationship between SQFs and crime rates at the level of street segments. Using a fixed-effects model comparing crime rates at each street segment to crime rates at the same segment on weeks with different SQF rates, the authors found a significant deterring effect of SQFs. Furthermore, they used a bivariate space-time Ripley's K-function [following @Diggle.1995] to reproduce the found effect. While @Weisburd.2015 found a deterring effect of SQFs, its magnitude is on a small scale and even the authors themselves note that a casual interpretation remains difficult.  
+
+@Rosenfeld.2017 followed a similar design to find similarly small deterrent effects of SQFs. They concluded that "crime reductions associated with a monthly dose of SQFs are relatively small and short lived" [@Rosenfeld.2017, 16]. Again, the authors note that due to issues in the methodological design casual inference and interpretation is impossible. 
+
+The existing literature is uncertain about evidences for the effects of SQFs on crime. Some authors report significant, yet small deterring effects. The variance of methodological approaches is wide, yet all designs were unable to produce reliable casual results. Also, the presented papers analyse the incidence of racial profiling, effects of SQFs on 911-calls or complaints. Arrests have not yet been used as an outcome that SQFs might have an effect on. The current study tries to close this gap by proposing a novel methodological approach and examining arrests as the primary outcome. 
+
+
+# Theory
+
+## Theoretical Background
+
+The use of SQFs as a proactive policing strategy is explicitly based on the Broken Windows Theory [@Fagan.2000]. The Broken Widows Hypothesis can be traced back to @Wilson.1982. Its basic idea is best summarized as "disorder leads to more disorder". Experiments have shown that states of disorder facilitate the emergence of more disorder, even when the initial state is of a different type. For example @Keizer.2008 found that the presence of graffiti significantly increased the chances of littering. Replicating experiments of @Keuschnigg.2015 demonstrated that these disorder effects are limited to low-cost decisions. Therefore, SQFs should deter criminal activity by removing disorder. Following the broken windows hypothesis, the removal of crime should exponentiate. The more criminals are found by SQFs, the more potential crimes are prevented. It could be assumed that the absence of crime or disorder in an area signals a high probability of being caught by the police.     
+
+In addition to that, police presence in an area (which is signaled by an SQF) also directly shifts potential criminals' assessments of the probability of being caught. The more SQFs there are in an area, the higher the probability of being caught when performing a crime in the area.   
+
+\newpage
+
+## Decision Model
+
+These ideas are formalized in the following decision model:
+\begin{align*}
+    \Pi_{c}(\ell,t) & = \mathds{E}\big[B(\ell, t) - C(\ell, t)\big] \\
+    & = \mathds{E}[B(\ell, t)] - \mathds{E}[C(\ell, t)] \\
+    & = b \ \cdot \ (1 - p(\ell, t)) - c \ \cdot \ p(\ell, t) \\
+    & = b - p(\ell, t) \ \cdot \ (b - c) \\
+    & \mathrm{with} \\
+    p(\ell, t) & = f(N_{sqf}(\ell, t), \ N_{c}(\ell, t)) 
+\end{align*}
+
+\noindent It is assumed, that a criminal decides if and where to perform a criminal offence depending on:   
+
+  * $\mathds{E}[B(\ell, t)]$: expected benefit of crime at location $\ell$ and time $t$
+  * $\mathds{E}[C(\ell, t)]$: expected cost of crime at location $\ell$ and time $t$
+
+\noindent these two can be decomposed into:
+
+  * $b$: benefit of crime
+  * $c$: cost of crime
+  * $p(\ell, t)$: probability of being caught at location $\ell$ and time $t$ which depends on
+      + $N_{sqf}(\ell, t)$: Number of SQFs at location $\ell$ and time $t$
+      + $N_{c}(\ell, t)$: Number of crimes at location $\ell$ and time $t$
+  
+Following the proposed model, a person decides to perform a criminal act if the profit of crime $\Pi_{c}(\ell,t)$ is larger than 0, thus the expected benefit of crime is larger than the expected cots. Since the expected benefits and costs of crime depend on the probability of being caught $p(\ell, t)$, it plays a substantial role in crime decision making. In this model it is assumed that $p(\ell, t)$ among other factors depends on the number of SQFs and the number of other crimes at the location. This is because SQFs potentially signal police presence. The higher the police activity at a location the higher the chances of being seen. The number of other crimes negatively influences $p(\ell, t)$. The more other offenders there are, the lower the individual chance of being caught. It is easy to hide in the masses. This also reflects the idea of the broken windows hypothesis. Because a criminal never knows the amount of current SQFs and crimes at a location $\ell$ at the time $t$, the number of SQFs and other crimes at an earlier time $t-\tau$ is used to assess the probability $p(\ell, t)$. 
+
+## Implications
+
+The proposed model simplifies the decision process and describes which factors play a role in individual crime decisions. This study tries to explain changes in aggregated crime rates and not why an individual becomes a criminal. Consequently, the model's implications for interdependencies on the level of crime rates must be derived.  
+
+Since $b$ and $c$ are stable values, independent of time $t$ and location $\ell$, $p({\ell, t})$ is the only altering size in the model. An individual decides to perform a crime at a location and time, when:
+
+\begin{align*}
+0 & < \Pi_{c}(\ell,t) \\
+0 & < b - p({\ell, t}) \cdot (b-c) \\
+p({\ell, t}) & < \frac{b}{b-c}
+\end{align*}
+
+As specified, this probability of being caught depends on the number of SQFs at a location and time $N_{sqf}(\ell, t)$ and the number of other crimes at the location and time $N_c(\ell, t)$. The number of crimes is the outcome of the individual crime decisions of all other actors. For the number of SQFs it can be assumed that the police plans SQFs where they observed a high crime rate in the previous time periods: 
+
+$$
+N_{sqf}(\ell, t) = f(N_c(\ell, t-\tau))
+$$
+
+What follows on the aggregate level is that crime is highly clustered in space and time. Also, SQFs spatially and temporally follow the crime patterns. Therefore, SQFs are clustered around crime hot spots. Still, after an SQF, at time $t+\tau$, at a location $\ell$, crime rates at this location should decline. The model implies, that either the global crime rate will decrease or that crime moves to a different location. 
+
+## Hypothesis
+
+When applied to the question at hand, the model implies the following hypothesis. \vspace*{0.3cm}
+
+*Deterrence Hypothesis:*  
+
+*An SQF leads to a lesser number of arrests in a contained area of space and time.* 
+\vspace*{0.3cm}  
+
+\noindent This hypothesis is in line with the claims of the NYPD, that SQFs effectively deter crime. In the following parts of this paper, the hypothesis will be tested.  
+
+# Data
+
+All data used are openly available on New York City's open data platform^[https://opendata.cityofnewyork.us/]. Data on all reported SQFs and arrests conducted in 2006 in New York were attained. These data include x- and y-coordinates for each SQF and arrest. While NYPD police officers are obligated to report every SQF and arrest [see @Weisburd.2015: 35], it is most likely that some SQFs are unreported, while other reports were filed to reach personal quotas. Therefore, it must be kept in mind that all further analyses are run for reported SQFs and arrests. The dark field of unreported SQFs cannot be considered.  
+
+The SQF data set consists of `r format(n_sqf_all[1,2], big.mark = ",")` reported SQFs for 2006. Of these, `r format(nrow(filter(data_final, is_sqf == 1)), big.mark = ",")` were included in the analysis. `r format(n_sqf_all[1,2] - nrow(filter(data_final, is_sqf == 1)), big.mark = ",")` data points had to be excluded due to coordinates that are missing or outside the city boundaries of New York. This results in a hit rate of `r paste0(round((nrow(filter(data_final, is_sqf == 1)) / n_sqf_all[1,2])*100, 2)," %")`, which is similar to hit rates reported by @Weisburd.2015 and @Wooditch.2016. On average there are `r format(round(nrow(data_final) / 365, 2), big.mark = ",")` SQFs per day.  
+
+All `r format(nrow(data_arrest), big.mark = ",")` arrests that were reported in 2006 are included in the analysis. There are averagely  `r format(round(nrow(filter(data_arrest, ARREST_DATE < "2007-01-01" & ARREST_DATE >= "2006-01-01")) / 356, 2), big.mark = ",")` arrests a day. The figure below shows kernel density distributions for both point patterns. It is clear, that arrests and SQFs appear in the same areas. Arrests seem to be centered in Manhattan. SQFs are less densely distributed and spread more into Brooklyn. A further description of the data set can be found in the Appendix section.
+
+```{r warning=FALSE, fig.cap="Kernel density map of arrests and SQFs in 2006"}
+nyc_shape_owin <-
+  nyc_zip_shape_ll |>
+  st_transform(crs = 6345) |>
+  st_simplify(dTolerance = 50) |>
+  as.data.frame()
+
+arrests.ppp_all <- arrests.ppp[[1]]
+
+sqf.ppp_all <- sqf.ppp[[1]]
+
+density_arrests <- density.ppp(arrests.ppp_all)
+density_sqf <- density.ppp(sqf.ppp_all)
+
+
+gg1 <-
+  as.data.frame(density_arrests) |>
+  ggplot(mapping = aes(
+    x = x,
+    y = y,
+    fill = value
+  )) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York Arrests 2006") +
+  scale_fill_viridis(
+    name = "Density",
+    limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE)
+  )
+
+
+gg2 <- as.data.frame(density_sqf) |>
+  ggplot(mapping = aes(
+    x = x,
+    y = y,
+    fill = value
+  )) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York SQFs 2006") +
+  scale_fill_viridis(
+    name = "Density",
+    limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE)
+  )
+
+cowplot::plot_grid(
+  gg1,
+  gg2,
+  ncol = 2
+) +
+  theme(
+    plot.margin = margin(1, 1, 1, 1, "cm"),
+    plot.background = element_rect(color = "black")
+  )
+```
+
+\FloatBarrier
+
+# Methods
+
+## Considerations
+
+As other authors have mentioned before, it is a methodological challenge to disentangle the casual mechanisms between SQFs and crime [@Apel.2015; @Rosenfeld.2014 and others]. On the one hand, SQFs are a response to crime. Thus, SQFs and high crime are correlated. On the other hand though, SQFs may deter or displace crime [@Weisburd.2015, 34]. Comparing only areas with high and low numbers of SQFs in terms of crime rates can easily lead to an ecological fallacy.  
+
+When trying to estimate the effect of an SQF on arrest rates, it is important to remember that arrests and SQFs don't occur independently. SQFs might cause arrests when illegal contraband is found. Conversely, high crime areas where many arrests are made, will be of particular interest to the police, and therefore areas with many SQFs.  
+
+This means, that the numbers of SQFs and arrests are highly spatially correlated. To overcome the issue of bidirectional association, a difference-in-difference design is proposed. By comparing the arrest rates at a location before and after the occurrence of an SQF, it is possible to condition on the baseline arrest rate. In addition, by comparing the changes with a random control sample, it can be ruled out that the changes in arrest rates are due to a general trend in arrest activity at the time.    
+
+\newpage
+
+## Micro-econometric Design
+
+Before being able to analyze arrest counts, the numbers of arrests in the vicinity of each SQF had to be computed. This process was done in two steps:
+  1) A spatial buffer was constructed around each SQF event.
+  2) The number of arrests that fell within the buffer on a certain day was counted.
+
+The following graphic illustrates these two steps on the example of a single SQF in Manhattan on March 10, 2006. 
+
+```{r warning=FALSE, fig.height=6, fig.cap="Steps to micro-econometric design" }
+points_sqf_ll <-
+  data_final |>
+  filter(datestop == "2006-03-10") |>
+  # sample_n(800) |>
+  mutate(across(.cols = ends_with("coord"), .fns = as.numeric),
+    geometry = st_multipoint(as.matrix(cbind(xcoord, ycoord))),
+    is_sqf = factor(is_sqf,
+      levels = c("1", "0"),
+      labels = c("SQFs", "Control")
+    )
+  ) |>
+  # select(geometry) |>
+  st_as_sf(coords = c("xcoord", "ycoord"), crs = st_crs("WGS84"))
+
+points_arrests_ll <-
+  data_arrest |>
+  filter(ARREST_DATE == "2006-03-10") |>
+  sample_n(800) |>
+  select(Longitude, Latitude) |>
+  na.omit() |>
+  as.matrix() |>
+  st_multipoint() |>
+  st_sfc(crs = st_crs("WGS84"))
+
+manhattan_ll <-
+  nyc_shape_ll |>
+  filter(BoroName == "Manhattan")
+
+gg1 <-
+  ggplot() +
+  geom_sf(data = nyc_shape_ll, fill = "white") +
+  geom_sf(
+    data = points_sqf_ll,
+    aes(color = as.factor(is_sqf)),
+    alpha = 0.7
+  ) +
+  labs(color = "") +
+  theme_void() +
+  theme(
+    panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+    legend.position = "bottom"
+  ) +
+  labs(title = "(3) SQFs and control events on 2006-03-10") +
+  scale_color_manual(
+    name = "",
+    values = c(
+      "SQFs" = "brown3",
+      "Control" = "cornflowerblue"
+    )
+  )
+
+this_sqf <- points_sqf_ll[57, ]
+buffer <- buffer_sqf <- st_buffer(this_sqf, dist = 1000)
+
+gg2 <-
+  ggplot() +
+  geom_sf(data = manhattan_ll, fill = "white") +
+  geom_sf(data = buffer, color = "brown3", fill = "white") +
+  geom_sf(data = this_sqf, color = "brown3") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 0.5)) +
+  labs(title = "(1) 1km buffer around each event")
+
+int_2006 <- st_intersection(buffer, points_arrests_ll)
+
+gg3 <-
+  ggplot() +
+  geom_sf(data = manhattan_ll, fill = "white") +
+  geom_sf(data = buffer, color = "brown3", fill = "white") +
+  geom_sf(data = int_2006, alpha = 0.5) +
+  geom_sf(data = this_sqf, color = "brown3") +
+  theme_void() +
+  theme(panel.border = element_rect(colour = "black", fill = NA, size = 0.5)) +
+  labs(title = "(2) Count number of arrests in buffer")
+
+cowplot::plot_grid(
+  gg2,
+  gg3,
+  ncol = 2
+)
+```
+
+\FloatBarrier
+The number of arrests on each day from 10 days before to 10 days after each SQF was counted. The procedure was performed with different buffer radii of 1km, 5km and 10km in order to later be able to do robustness checks with varying radii and time frames. The day of the SQF was not considered, as the arrest counts on that day might be skewed, as an SQF can result in an arrest.  
+
+Additionally, a Poisson point process was used to generate random control events under complete spatial randomness (CSR). 500 points per day were drawn and subjected to the same method described above. The following figure shows all SQF events and randomly generated events on March 10, 2006. It is noticeable, that SQFs are clustered around Manhattan, Brooklyn and a few hot spots, while random events appear throughout the whole city. 
+
+```{r cache=FALSE, cache=FALSE, fig.height=6, fig.cap="Poisson point process as control"}
+gg1
+```
+
+\FloatBarrier
+
+By generating a group of random control events, it is possible to compare trends in the number of arrests at SQF sites with the developments at locations where no SQF occurred. This allows for conditioning on global trends such as the periodicity of SQF and arrest numbers described in the Appendix section.  
+
+After the relevant data was generated, descriptive methods were applied to describe the distribution of arrests on the days before and after an SQF event. The clustering of the point patters was examined (see Appendix)   
+
+Thereafter, regression analyses were used to calculate effect sizes and to condition on controls. A panel OLS regression design was used to account for the temporal dimension of the days to/from each event. 20 observations (10 days before and 10 days after the event) per radius of interest for each SQF and random event were included in the analysis. For each observation radius (1km, 5km and 10km) a separate OLS random-effects model was computed. The models include several dummy variables. Thus, estimates of the number of arrests were computed for: 
+  1) the time before and after the event,
+  2) SQF events versus control events and
+  3) an interaction between the two. 
+This interaction is of great interest as it provides an estimate for the number of arrests at locations where an SQF occurred in the time after the SQF, which is the effect in this study tries to find. Additionally, it was conditioned on the number of other SQFs in the radius. Other regression models were tested and are reported in the Appendix.  
+
+As noted before, this approach results in a difference-in-difference estimation for the average effect of an SQF. The expected change in the number of arrests due to an SQF is composed of the difference between the before-after change at SQF sites and the before-after change at the control locations:
+
+
+\begin{equation*}
+  \begin{aligned}
+    \mathds{E}\big(\Delta_{\mathrm{arrests}} \ | & \ \mathrm{SQF, after} \big) = \\
+    & \big(\mathds{E}[\mathrm{arrests} \ | \ \mathrm{SQF, after}] - \mathds{E}[\mathrm{arrests} \ | \ \mathrm{SQF, before}]\big) - \\ 
+    & \big(\mathds{E}[\mathrm{arrests} \ | \ \mathrm{random, after}] - \mathds{E}[\mathrm{arrests} \ | \ \mathrm{random, before}]\big)
+  \end{aligned}
+\end{equation*}
+
+
+The described interaction effect corresponds to this difference and thus to the sought-after effect. Therefore, this methodological design explores whether the number of arrests in the days before an SQF differs from the number of arrests afterwards. It is also examines whether the trend observed for arrests in the circumference of SQFs is also observed at random points. This should show if there are changes in the number of arrests and if these changes are due to the occurrence of an SQF or whether a global trend has influenced the number of arrests. 
+
+# Results
+
+## Descriptive Results
+
+```{r descriptive, message=FALSE}
+means <-
+  data_final_long |>
+  filter(is_sqf == 1) |>
+  group_by(dist, is_sqf) |>
+  summarise(mean = mean(arrests) |> round(3),
+            sd = sd(arrests) |> round(3)) |>
+  ungroup() |>
+  as.list()
+
+means_csr <-
+  data_final_long |>
+  filter(is_sqf == 0) |>
+  group_by(dist, is_sqf) |>
+  summarise(mean = mean(arrests) |> round(3),
+            sd = sd(arrests) |> round(3)) |>
+  ungroup() |>
+  as.list()
+
+other_sqfs_means <-
+  data_final_long |>
+  filter(is_sqf == 1) |>
+  group_by(dist, is_sqf) |>
+  summarise(mean = mean(other_sqfs) |> round(3),
+            sd = sd(other_sqfs) |> round(3)) |>
+  ungroup() |>
+  as.list()
+
+other_sqfs_means_csr <-
+  data_final_long |>
+  filter(is_sqf == 0) |>
+  group_by(dist, is_sqf) |>
+  summarise(mean = mean(other_sqfs) |> round(3),
+            sd = sd(other_sqfs) |> round(3)) |>
+  ungroup() |>
+  as.list()
+```
+
+The average number of observed arrests per day in a 1km (5km, 10km) radius around an SQF lies at  `r means$mean[1]` (`r means$mean[2]`, `r means$mean[3]`) with a standard deviation of `r means$sd[1]` (`r means$sd[2]`, `r means$sd[3]`) arrests. The amounts of arrests at the random locations average at `r means_csr$mean[1]` (`r means_csr$mean[2]`, `r means_csr$mean[3]`) with a standard deviation of `r means_csr$sd[1]` (`r means_csr$sd[2]`, `r means_csr$sd[3]`). As expected, the number of arrests increases with increasing radius of observation. Also, there are more arrests at SQF locations than at random locations. This supports the reported clustering of arrests and SQFs at crime hot spots.  
+
+The figure below shows the distribution of the number of arrests for the three observation radii. It presents box plots for each of the four groups: at SQF sites before and after the event and at the random locations (CSR) before and after the event. It is visible, that in general there are less arrests at the random locations. Also, the distribution of arrest counts within each group is visibly indifferent before and after the events.
+
+```{r cache=TRUE, fig.height=6, fig.cap="Average number of arrests per day in radius around SQF and random points pooled before and after event", fig.pos="h"}
+load("Data/Clean/lmer_dat_simple.Rds")
+
+lmer_dat_simple <-
+  lmer_dat_simple |>
+  mutate(
+    arrests = arrests/10
+  )
+
+ylim1 <- boxplot.stats(filter(lmer_dat_simple, dist == 1) |>
+  pull(arrests))$stats[c(1, 5)]
+ylim5 <- boxplot.stats(filter(lmer_dat_simple, dist == 5) |>
+  pull(arrests))$stats[c(1, 5)]
+ylim10 <- boxplot.stats(filter(lmer_dat_simple, dist == 10) |>
+  pull(arrests))$stats[c(1, 5)]
+
+lmer_dat_simple |>
+  filter(dist == 1 & arrests <= ylim1[2] |
+    dist == 5 & arrests <= ylim5[2] |
+    dist == 10 & arrests <= ylim10[2]) |>
+  mutate(
+    dist = as.factor(dist) |>
+      recode(
+        "1" = "1km",
+        "5" = "5km",
+        "10" = "10km"
+      ),
+    neg = recode(neg,
+      "1" = "before event",
+      "0" = "after event"
+    ) |>
+      fct_relevel("before event")
+  ) |>
+  ggplot(
+    mapping = aes(
+      x = neg,
+      fill = is_sqf,
+      y = arrests
+    )
+  ) +
+  geom_boxplot(notch = TRUE, outlier.shape = NA) +
+  guides(shape = "none") +
+  xlab("Days to/from SQF") +
+  ylab("Number of Arrests") +
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "0" = "cornflowerblue",
+      "1" = "brown3"
+    ),
+    labels = c("CSR", "SQF")
+  ) +
+  theme_bw() +
+  facet_grid(vars(dist), scales = "free_y") +
+  theme(legend.position = "bottom") +
+  labs(subtitle = "Outliers removed for better display.")
+```
+
+Drawing the attention to the amount of other SQFs in the event radius, there are on average `r other_sqfs_means$mean[1]` (`r other_sqfs_means$mean[2]`, `r other_sqfs_means$mean[3]`) in a 1km (5km, 10km) radius of an actual SQF. The standard deviation lies at `r other_sqfs_means$sd[1]` (`r other_sqfs_means$sd[2]`, `r other_sqfs_means$sd[3]`). Comparatively, there were `r other_sqfs_means_csr$mean[1]` (`r other_sqfs_means_csr$mean[2]`, `r other_sqfs_means_csr$mean[3]`) SQFs in the observed radii around random events with a standard deviation of `r other_sqfs_means_csr$sd[1]` (`r other_sqfs_means_csr$sd[2]`, `r other_sqfs_means_csr$sd[3]`). Again, it is obvious, that there is a much higher police activity at SQF sites and it can be again derived, that SQFs are highly clustered at a few hot spots. 
+
+\newpage
+ 
+
+## Regression Models
+
+```{r regression_tab_1, cache=FALSE, results='asis'}
+cat(readLines("Writing/Term_Paper/regression_tab.tex"))
+```
+
+\FloatBarrier
+
+As described in the methods section, separate OLS random-effects models were fitted to estimate the number of arrests in each of the spatial radii of observation. The regression table above reports the results of these panel regression models. A lowest-level unit of observation in these models is an arrest count in the area around an event on a given day before or after the event. These units are clustered: 20 observations per radius for each event^[Regression models with a different time window of only 5 days before and after each event are reported in the Appendix.].  
+
+As can be seen from the variation of the intercepts across models, the number of observed arrests increases with the size of the buffer radius. This represents a very simple fact: the larger the observation window, the more arrests are observed. Furthermore, it can be seen, that the estimated coefficients point in the same direction throughout all three models. The more other SQFs there are in the vicinity of any event (SQF or control), the higher the number of observed arrests. Looking at all events, the number of arrests in the time before isn't significantly different from the number of arrests after the event. As described in the descriptive results, the number of arrests at SQF sites is higher than the number of arrests at random control locations. Finally, the interaction effect shows, that the number of arrests at sites of actual SQF events in the time after the event is significantly smaller than at non-SQF locations or in the time before. This can be interpreted as the deterrent effect of SQFs. Due to an SQF, the average number of arrests within a 1km radius declined by 0.083. Within a 5km radius the average decline is 0.121 arrests and the deterrent effect in a 10km radius sums up to an average of 0.625 deterred arrests.     
+
+Consequently, the analysis could find evidence for a statistically significant deterrent effect of SQFs. To better understand the scale of the interaction effect in question, it was put in relation to the intercept of the respective model. These relations are also reported in the table above. The relation of the interaction to the intercept is 10 times larger in the 1km model than in the other two models. Still, even in the first model, the relation is on a scale of about 2 %. This means, that the number of arrests per day in a 1km radius around an SQF site after the SQF is only 2 % smaller than the baseline number of arrests. As noted, the effect size in relation to the intercept is 10 times smaller in the two larger radii.
+
+
+## Conclusion
+
+To sum up the reported results, the study could find a statistically significant deterrent effect of SQFs on arrests in New York City in 2006. Although the difference-in-difference analysis revealed a significant effect, its magnitude is very small. The bigger the radius of observation, the smaller the influence of an SQF in relation to the general increase in the number of arrests in a larger radius. But even in the smallest observed window of 1km radius, the effect size remains very small. It is questionable, if a decrease of about 2 % in SQF numbers can justify the excessive use of the tactic by the NYPD. The NYPD's claim that SQFs effectively deter crime couldn't be supported in this study. 
+
+\newpage
+
+# Discussion
+
+While other authors such as @Weisburd.2015 or @Rosenfeld.2017 also find a significant deterring effect of SQFs using different statistical methods and measures of crime, there too, the reported effects stay small. @Rosenfeld.2017 report a deterrent effect of about -0.005 to -0.009 violent crimes. Thus, it is not surprising that the current study doesn't find large effects of SQFs. 
+
+Still, this study adds to the existing literature by using a micro-econometric difference-in-difference design. Said other investigations mostly focus on effects on the scale of neighborhoods or street segments and compare segments with different SQF rates in their crime outcomes. The current research focuses on the effects of individual SQFs. The applied methods of counting arrests in a radius around SQFs and random events could also be applied to other crime outcomes such as 911-calls or complaints. 
+
+However, the findings of this study are limited by two main aspects. First, even though approaching a casual design by creating a random control group and differing spatial and temporal areas of interest, the effects between arrests rates and SQFs cannot be fully entangled. There are multiple other factors influencing arrest rates such as the capacity of the police force, special events that require the police's attention and many more. Also, the arrest and SQF rates at the analyzed locations are not independent. The SUTVA is violated, as a high number of arrests at one location might mean, there are less arrests at an other location due to the limit in police officers. Second, number of arrests only represent a vague measurement of crime. Arrest rates are skewed and cannot be safely interpreted as the rate of criminal behavior. As said, not all effects influencing the used independent variable could be included in the analysis. Still, due to the lack of accessible data for other crime measurements, the study had to be limited to arrest rates.
+
+Also, because of the found effect sizes it can be assumed, that statistical significance in the reported models was only reached due to the large sample size. The number of observations in the proposed design increases with the size of the temporal window. This is an issue, as it becomes very easy to inflate the number of observations. 
+
+Furthermore, there were many degrees of freedom for decisions to be made in the analysis process. These decisions have to be questioned! To limit the year of the analysis to 2006 was a decision made for practicability reasons. It would be advised to redo the analysis for other years. The used radii of observation were chosen to seem plausible. It could be interesting to redo the analysis for much smaller radii. To select 500 random control events per day also fell under the discretion of the author. It cannot be ruled out, that the analysis is sensitive to changes in the size of the control group. As reported in the Appendix, the choice of the regression model and the time frame influences the results. Only looking at arrest counts for 5 days before and after each event doesn't yield the same consistent results for all radii of observation.
+
+Finally, it can be concluded that though the current investigation is limited in its interpretation, the NYPD's and other proponents claim that SQF practices effectively deter crime cannot be supported. It remains questionable, how big the reported effects are in comparison to other deterrent policing tactics. Still, this study concludes that the proactive use of SQFs to deter crime is not effective enough to justify racial profiling and police violence.    
+
+\newpage
+
+# References
+
+\interlinepenalty=10000
+
+<div id="refs"></div>
+
+\newpage
+
+```{=latex}
+\addcontentsline{toc}{section}{Appendix}
+\part{Appendix} % Start the appendix part
+
+\parttoc
+\vspace*{1cm}
+\partlof
+\vspace*{1cm}
+\partlot
+
+\newpage
+\rhead{\small{Appendix}} 
+```
+
+# Data {-}
+
+```{r time, message=FALSE}
+tmp1 <-
+  data_arrest |>
+  filter(
+    ARREST_DATE < "2007-01-01",
+    ARREST_DATE >= "2006-01-01"
+  ) |>
+  count(ARREST_DATE) |>
+  mutate(from = "arrests") |>
+  rename(date = ARREST_DATE)
+
+tmp2 <-
+  data_sqf |>
+  filter(
+    datestop < "2007-01-01",
+    datestop >= "2006-01-01"
+  ) |>
+  count(datestop) |>
+  mutate(from = "SQFs") |>
+  rename(date = datestop)
+
+tmp <- bind_rows(tmp1, tmp2)
+
+more_arrests <-
+  tmp |>
+  group_by(date) |>
+  filter(n == max(n)) |>
+  ungroup() |>
+  count(from)
+```
+
+To further describe the data set, the number of SQFs and arrests were plotted over time with an additional LOESS smoothing line:
+
+```{r message=FALSE, fig.cap="Number of SQFs and arrests over time", fig.pos="h"}
+ggplot(
+  tmp,
+  aes(
+    x = date,
+    y = n,
+    color = from
+  )
+) +
+  geom_smooth(linewidth = 0.8) +
+  geom_line() +
+  ylab("amount") +
+  scale_color_manual(
+    name = "",
+    values = c(
+      "SQFs" = "brown3",
+      "arrests" = "cornflowerblue"
+    )
+  )
+```
+
+The number of arrests per day remain more or less stable throughout the year. The number of SQFs follow a slight downward trend at the end of 2006. All over the year, there are more SQFs per day than arrests. There are only `r more_arrests$n[1]` days in 2006 with more arrests than SQFs. Furthermore, the amounts of SQFs and arrests follow a shared temporal periodicity. This is further explored in the figure below. 
+
+```{r fig.cap="Number of SQFs and arrests on days of the week", fig.pos="h"}
+tmp |>
+  mutate(day = wday(date,
+    label = TRUE,
+    abbr = FALSE,
+    locale = "USA"
+  )) |>
+  ggplot(mapping = aes(
+    x = day,
+    y = n
+  )) +
+  geom_boxplot(mapping = aes(fill = from)) +
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "SQFs" = "brown3",
+      "arrests" = "cornflowerblue"
+    )
+  ) +
+  xlab("weekday") +
+  ylab("amount")
+```
+
+As can be seen, there are less SQFs and arrests on weekends and Mondays. On average, Wednesdays have the most SQFs and arrests. This periodicity is important to keep in mind, as the number of arrests after an SQF on a Thursday might decrease only because there are less arrests in general. To account for these kinds of global temporal trends, the use of a random control group is advised and practiced in this study. 
+
+\FloatBarrier
+
+
+# K-Statistics {-}
+
+To describe and analyze the clustering of arrests and SQFs, Ripley's K-function was applied. The results for growing distances for arrests and SQFs in comparison to CSR are reported in the figure below. Both arrests and SQFs are highly clustered. In bigger windows of observation, arrests are a little more clustered than arrests. This is in line with the Kernel Density estimations reported in the main part of the paper. 
+
+```{r fig.cap="K-Statistic for arrests and SQFs seperately", fig.pos="h"}
+K_arrests <- Ks[[1]][[1]]
+K_sqfs <- Ks[[1]][[2]]
+
+
+ggplot(mapping = aes(x = r)) +
+  geom_line(mapping = aes(y = K_arrests$iso, color = "arrests")) +
+  geom_line(mapping = aes(y = K_arrests$theo, color = "CSR"), linetype = "dashed") +
+  geom_line(mapping = aes(y = K_sqfs$iso, color = "SQFs")) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  xlab("Distance in meters") +
+  ylab("K-hat") +
+  scale_color_manual(values = c("SQFs" = "brown3", "arrests" = "black", "CSR" = "cornflowerblue"), name = "") +
+  theme_bw() +
+  theme(legend.position = c(0.3, 0.8), legend.title = element_blank())
+```
+
+\FloatBarrier
+
+To find out, if and how arrests are clustered around SQFs, a cross K-function clustering analysis [@Baddeley.2016] was run. Its results are reported in the figure below. An estimated K in this analysis describes the expected number of *arrests* lying within a distance r of a typical *SQF*, standardized by dividing by the intensity of *arrests* [@Baddeley.2016: 594]. As reported by other authors [e.g. @Weisburd.2015], arrests are highly clustered around SQFs. This is in line with other results reported in the main part of the paper. Arrests and SQFs are both clustered at crime hot sports. 
+
+```{r fig.cap="Cross K-Function for arrests and SQFs in 2006",  fig.pos="h"}
+K1 <- Kcross[[1]]
+
+ggplot(mapping = aes(x = r)) +
+  geom_line(mapping = aes(y = K1$iso, color = "K-Cross")) +
+  geom_line(mapping = aes(y = K1$theo, color = "CSR"), linetype = "dashed") +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  xlab("Distance in meters") +
+  ylab("K-hat") +
+  scale_color_manual(values = c("K-Cross" = "black", "CSR" = "cornflowerblue"), name = "") +
+  theme_bw() +
+  theme(legend.position = c(0.3, 0.8), legend.title = element_blank())
+```
+
+
+An issue, why this approach isn't sufficient to make casual assumptions about the effect of SQFs on arrests is, that it doesn't consider time. It computes the expected number of arrests in the vicinity of an SQF, but considers all arrests in 2006. Since SQFs and arrests are clustered at crime hot spots, there will always be more arrests at SQF sites. This doesn't answer the question how arrest numbers change after an SQF. To find the answer to this question, time has to be part of the analysis. That is why, the main paper proposes a micro-economic difference-in-difference design. 
+  
+\FloatBarrier
+
+
+# Boxplots with varying time {-}
+
+The following figure is a variant of the box plots reported in the descriptive results of the main paper. Here, the days before and after the events are not pooled. The statement of the figure remains. There are less arrests at random locations. There is no change in arrest numbers at random locations over time. Some changes in arrest numbers at SQF sites over time are visible. These seem to be very small and there doesn't seem to be a pattern indicating there are less arrests in the time after an SQF. 
+
+```{r cache=TRUE, fig.height=6, fig.cap="Number of arrests in radius around SQF and random points across days before and after event", fig.pos="h"}
+ylim1 <- boxplot.stats(filter(data_final_long, dist == 1) |>
+  pull(arrests))$stats[c(1, 5)]
+ylim5 <- boxplot.stats(filter(data_final_long, dist == 5) |>
+  pull(arrests))$stats[c(1, 5)]
+ylim10 <- boxplot.stats(filter(data_final_long, dist == 10) |>
+  pull(arrests))$stats[c(1, 5)]
+
+data_final_long |>
+  filter(
+    time_to_sqf >= -10,
+    time_to_sqf <= 10,
+    dist == 1 & arrests <= ylim1[2] |
+      dist == 5 & arrests <= ylim5[2] |
+      dist == 10 & arrests <= ylim10[2]
+  ) |>
+  mutate(dist = as.factor(dist) |>
+    recode(
+      "1" = "1km",
+      "5" = "5km",
+      "10" = "10km"
+    )) |>
+  ggplot(
+    mapping = aes(
+      x = factor(time_to_sqf, levels = as.character(c(-10:10))),
+      fill = is_sqf,
+      y = arrests
+    )
+  ) +
+  geom_boxplot(notch = TRUE, outlier.shape = NA) +
+  geom_vline(xintercept = "0", color = "brown3") +
+  scale_x_discrete(breaks = as.character(c(-10:10)), drop = FALSE) +
+  guides(shape = "none") +
+  xlab("Days to/from SQF") +
+  ylab("Number of Arrests") +
+  scale_fill_manual(
+    name = "",
+    values = c(
+      "0" = "cornflowerblue",
+      "1" = "brown3"
+    ),
+    labels = c("CSR", "SQF")
+  ) +
+  theme_bw() +
+  facet_grid(vars(dist), scales = "free_y") +
+  theme(legend.position = "bottom") +
+  labs(subtitle = "Outliers removed for better display.")
+```
+
+\FloatBarrier
+
+\newpage
+ 
+# Regressions {-}
+
+The following table reports the same regression models as used in the main part of the paper. Here, the temporal dimension of observation was limited to 5 days before and 5 days after each event. This was done as a robustness check, to see if the results reported using 10 days before and after are sensitive to a change in the observed temporal window. As can be seen, when only looking at 5 days before and after, the deterrent effect of SQFs can't be found in a 1km radius around the event anymore. The interaction is now positive. In the other radii of observation though, the reported effect has become smaller. Therefore, the found deterrent effect of SQFs isn't completely stable when changing the temporal window of observation. 
+
+
+```{r results='asis', cache=FALSE}
+cat(readLines("Writing/Term_Paper/regression_tab_5.tex"))
+```
+
+\newpage
+
+Since @Weisburd.2015 reported different effects of SQFs on crime in the different boroughs of New York [@Weisburd.2015, 41f], the regression model for the 1km observation radius was rerun for each borough separately. The results are reported in the table below. It is visible, that this study also finds different effects in the different boroughs of New York. While in some boroughs there still is a deterrent effect of SQFs, the effect couldn't be found in the Bronx and Staten Island. In these two boroughs there are significantly more arrests in the area around an SQF in the time after it happened, then in the time before. Thus, the deterrence effect of SQFs isn't stable across all 5 boroughs. 
+
+```{r results='asis', cache=FALSE}
+cat(readLines("Writing/Term_Paper/regression_tab_boros.tex"))
+```

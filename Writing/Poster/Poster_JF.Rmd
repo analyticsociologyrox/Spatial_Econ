@@ -1,0 +1,333 @@
+---
+title: "Crime Deterence and other Effects of SQFs on Arrests in New York City: A Spatial Analysis for 2006"
+output:
+  flexdashboard::flex_dashboard:
+    theme: 
+      version: 4
+      primary: "#B13130"
+      navbar-bg: "#B13130"
+    orientation: rows
+    source: embed
+    logo: ../Logo_small.png
+bibliography: ../Literatur.bib 
+csl: ../zfs.csl
+---
+
+<style type="text/css">
+
+.chart-title {  /* chart_title  */
+   font-weight: bold;
+
+</style>
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+
+knitr::opts_knit$set(root.dir = "~/_UNI/_MA/3_Semester/Spatial_Econometrics/AA_Project_SpatEcon")
+```
+
+```{r data, echo = FALSE, cache = FALSE}
+source(file = "Code/Makefile.R")
+theme_set(theme_bw())
+```
+
+# Poster
+
+## Row 1 {data-height=15}
+**Abstract:** 
+What effects did Search Question and Frisk tactics (SQFs) of the NYPD have on crime in 2006? Geo-data for all 2006 SQFs and arrests in New York City were analysed to find deterring or displacing effects of SQFs on arrests. The number of arrests before and after each SQF in a spatial area of 1, 5 and 10 km for all days from 10 days before to 10 days after the event were computed. Random points were used as a control. No effects were found. SQFs didn't decrease the number of arrests in any of the defined spatial and temporal windows. Results are consistent even when controlling for the amount of other SQFs in an area and computing fixed-effects models for each borrow of New York.
+
+
+
+## Row 2 {data-height=80}
+
+### **Methods**
+
+After attaining data from [New York City´s open data platform](https://opendata.cityofnewyork.us/), a descriptive spatial analysis of the point patterns of arrests and SQFs in 2006 was conducted. A cross K-function clustering analysis [@Baddeley.2016] was run to determine if arrests are anti-clustered around SQFs.  
+In order to approach a casual inference of the effects of SQFs on arrests, a spatial analysis with varying spatial and temporal dimensions was carried out. For each SQF in 2006, the amounts of arrests in a radius of 1, 5 and 10 km for each day from 10 days before to 10 days after the event were computed. The number of other SQFs in the area was also deduced. Additionally, a sample of poisson distributed random points throughout the area of New York was drawn as the control group. The random sample contains 500 points per day. The same metrics as for the actual SQF events were computed.  
+This procedure amounts to a regression discontinuity design, where the day of the SQF marks the casual event. It is to be explored, if the number of arrests in the days before the SQF differs from the number of arrests afterwards. It is also to be checked, whether the development seen for arrests in the circumference of SQFs is also observed at random points. This design should show if changes in the number of arrests are accountable to the occurrence of an SQF or if a general trend influenced the number of arrests.  
+A fixed-effects regression model will be fitted. It will compute separate slopes for each of the 3 spatial radii and the 5 boroughs of New York. 
+
+
+### **Results** 
+
+```{r plot}
+data_final_long |>
+  filter(dist == 5,
+         time_to_sqf >= -5,
+         time_to_sqf <= 5) |>
+  ggplot(
+    mapping = aes(
+      x = factor(time_to_sqf, levels = as.character(c(-5:5))),
+      fill = is_sqf,
+      y = arrests,
+      shape = neg
+    )) +
+  # geom_boxplot(outlier.alpha = 0.2) +
+  geom_violin(draw_quantiles = 0.5) +
+  geom_vline(xintercept = "0", color = "brown3") +
+  scale_x_discrete(breaks = as.character(c(-5:5)), drop = FALSE) +
+  labs(title = "number of arrests in 5km radius\naround SQFs and random control") +
+  guides(shape = "none") +
+  xlab("Days to/from SQF") +
+  ylab("Number of Arrests") +
+  scale_fill_manual(name = "",
+                    values = c("0" = "cornflowerblue",
+                               "1" = "brown3"),
+                    labels = c("CSR", "SQF")) +
+  annotate("text", x="0", y= 100, label="SQF", angle=90, vjust = -0.4, color = "brown3", size = 3) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+### **Discussion**
+
+While other authors such as @Weisburd.2015 or @Rosenfeld.2017 find a significant deterring effect of SQFs using different statistical methods and measures of crime, the reported effects always stay small. Thus, it is not surprising that the current study doesn't find a significant deterring effect of SQFs.  
+This study adds to the existing literature by using a computationally intensive micro-econometric design. Said other investigations mostly focus on effects on the scale of neighbourhoods or street segments. The current research focuses on the effects of individual SQFs.  
+However, the findings are limited by two main aspects. First, even though approaching a casual design by creating a random control group and differing spatial and temporal areas of interest, the effects between arrests rates and SQFs cannot be fully entangled. Second, number of arrests only represent a vague measurement of crime. Arrest rates are skewed and cannot be safely interpreted as the rate of criminal behaviour. Not all effects influencing the used independent variable could be included in the analysis. Still, due to the lack of data for other crime measurements, the study had to be limited to arrest rates.  
+It can be concluded that though the current investigation is limited in its interpretation, the NYPDs and other proponents claim that SQF practices effectively deter crime cannot be supported.  
+
+
+## Row 3 {data-height=5, .small}
+
+### **Prospects:**
+
+Following points still have to be worked on:
+* Revise theoretical background
+* Specify and interpret regression model
+* [bivariate space–time Ripley’s K-function](https://search.r-project.org/CRAN/refmans/surveillance/html/stK.html)? [see @Weisburd.2015, 43; @Diggle.1995]
+* Regression output in PDF?
+
+### **Author:**
+Jonas Frost (jonas.frost@studserv.uni-leipzig.de)  
+Masters Student  
+[Institute for Sociology](http://sozweb.sozphil.uni-leipzig.de/de/home.html)  
+[Departement of Social Sciences and Philosophy](https://www.sozphil.uni-leipzig.de/)  
+[University of Leipzig](https://www.uni-leipzig.de/)
+
+### **References:**
+
+<div id="refs"></div>
+
+# Appendix
+
+## Plots {.tabset}
+
+### Density Map
+
+```{r density_map, fig.asp=0.6}
+nyc_shape_owin <-
+    nyc_zip_shape_ll |>
+    st_transform(crs = 6345) |>
+    st_simplify(dTolerance = 50) |>
+    as.data.frame()
+
+density_arrests <- density.ppp(arrests.ppp[[1]])
+density_sqf <- density.ppp(sqf.ppp[[1]])
+
+
+gg1 <-
+  as.data.frame(density_arrests) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York Arrests 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+
+gg2 <- as.data.frame(density_sqf) |>
+  ggplot(mapping = aes(x = x,
+                       y = y,
+                       fill = value)) +
+  geom_tile() +
+  theme_void() +
+  labs(title = "New York SQFs 2006") +
+  scale_fill_viridis(name = "Density",
+                     limits = range(c(density_arrests$v, density_sqf$v), na.rm = TRUE))
+
+plot_grid(
+    gg1,
+    gg2,
+    ncol = 2
+    ) +
+  theme( plot.margin = margin(1, 1, 1, 1, "cm"),
+         plot.background = element_rect(color = "black")) 
+
+```
+
+### Crime & SQFs over time
+
+```{r time, fig.asp=0.6}
+tmp1 <-
+  data_arrest |>
+  filter(ARREST_DATE < "2007-01-01",
+         ARREST_DATE >= "2006-01-01") |>
+  count(ARREST_DATE) |>
+  mutate(from = "arrests") |>
+  rename(date = ARREST_DATE)
+
+tmp2 <-
+  data_sqf |>
+  filter(datestop < "2007-01-01",
+         datestop >= "2006-01-01") |>
+  count(datestop) |>
+  mutate(from = "SQFs") |>
+  rename(date = datestop)
+
+tmp <- bind_rows(tmp1, tmp2)
+  
+ggplot(tmp,
+       aes(x = date,
+           y = n,
+           color = from)) +
+  geom_smooth(linewidth = 0.8) +
+  geom_line() +
+  ylab("amount") +
+  scale_color_manual(name = "", 
+                     values = c("SQFs" = "brown3",
+                                "arrests" = "cornflowerblue")) +
+  labs(title = "number of SQFs and arrests over time") +
+  theme_bw()
+```
+
+
+### K-Cross
+
+```{r k_cross}
+K1 <- Kcross[[1]]
+
+ggplot(mapping = aes(x = r)) +
+    geom_line(mapping = aes(y = K1$iso, color = "Kcross")) +
+    geom_line(mapping = aes(y = K1$theo, color = "pois."), linetype = "dashed") +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    xlab("Distance in meters") +
+    ylab("K-hat") +
+    scale_color_manual(values = c("Kcross" = "cornflowerblue", "pois." = "black"), name = "") +
+    theme_bw() +
+    labs(title = paste0("Kcross 2006")) +
+    theme(legend.position = c(0.3, 0.8), legend.title = element_blank())
+```
+
+### Box Plots
+
+```{r box_plots, cache=TRUE}
+data_final_long |>
+  filter(time_to_sqf >= -10,
+         time_to_sqf <= 10) |>
+  mutate(dist = as.factor(dist) |>
+           recode("1" = "1km",
+                  "5" = "5km",
+                  "10" = "10km")) |>
+  ggplot(
+    mapping = aes(
+      x = factor(time_to_sqf, levels = as.character(c(-10:10))),
+      fill = is_sqf,
+      y = arrests
+    )) +
+  # geom_violin(draw_quantiles = 0.5) +
+  geom_boxplot(outlier.alpha = 0.3, notch = TRUE) +
+  geom_vline(xintercept = "0", color = "brown3") +
+  scale_x_discrete(breaks = as.character(c(-10:10)), drop = FALSE) +
+  labs(title = "number of arrests in radius around SQF and random points") +
+  guides(shape = "none") +
+  xlab("Days to/from SQF") +
+  ylab("Number of Arrests") +
+  scale_fill_manual(name = "",
+                    values = c("0" = "cornflowerblue",
+                               "1" = "brown3"),
+                    labels = c("CSR", "SQF")) +
+  theme_bw() +
+  facet_grid(vars(dist), scales = "free_y") +
+  theme(legend.position = "bottom")
+
+```
+
+
+### Regression
+
+```{r regression_tab, cache = TRUE}
+library(modelsummary)
+set.seed(2)
+ids <- sample(x = unique(data_final_long$id),
+              size = 40000)
+
+lmer_dat <-
+  data_final_long |>
+  filter(id %in% ids) |>
+  mutate(
+    pos = if_else(neg == 0, 1, 0) |> as.factor(),
+    not_sqf = if_else(is_sqf == 0, 1, 0) |> as.factor()
+  )
+
+lmer_fit_1 <-
+  lmer_dat |>
+  filter(dist == 1) |>
+  lmer(formula = arrests ~ time_to_sqf + other_sqfs + pos*is_sqf + (1 | reg/id),
+       data = _)
+
+lmer_fit_5 <-
+  lmer_dat |>
+  filter(dist == 5) |>
+  lmer(formula = arrests ~ time_to_sqf + other_sqfs + pos*is_sqf + (1 | reg/id),
+       data = _)
+
+lmer_fit_10 <-
+  lmer_dat |>
+  filter(dist == 10) |>
+  lmer(formula = arrests ~ time_to_sqf + other_sqfs + pos*is_sqf + (1 | reg/id),
+       data = _)
+
+lmer_fit_all <-
+  lmer(formula = arrests ~ time_to_sqf + other_sqfs + pos*is_sqf + (1 | reg/id) + (1 | dist),
+       data = lmer_dat)
+
+simple_lm <-
+  lm(formula = arrests ~ time_to_sqf + other_sqfs + pos*is_sqf,
+       data = lmer_dat)
+
+# tab_model(lmer_fit_1,
+#           lmer_fit_5,
+#           lmer_fit_10,
+#           lmer_fit_all,
+#           simple_lm,
+#           dv.labels = c("arrests<br>1km radius",
+#                         "arrests<br>5km radius",
+#                         "arrests<br>10km radius",
+#                         "arrests<br>all radii",
+#                         "simple OLS<br>arrests<br>all radii"),
+#           show.aic = TRUE)
+
+# equatiomatic::extract_eq(lmer_fit_1)
+
+library("plm")
+
+p.lmer_dat_1 <-
+  lmer_dat |>
+  filter(dist == 1) |>
+  distinct(id, time_to_sqf, .keep_all = TRUE) |>
+  pdata.frame(index = c("id", "time_to_sqf"))
+
+plm_fit <- 
+  plm(arrests ~ is_sqf + pos + is_sqf:pos + other_sqfs,
+    p.lmer_dat_1) 
+
+modelsummary(
+  models = list(
+    "arrests\n1km radius" = lmer_fit_1,
+    "arrests\n5km radius" = lmer_fit_5,
+    "arrests\n10km radius" = lmer_fit_10,
+    "simple OLS\narrests\nall radii" = lmer_fit_all,
+    "linear within\npanel model" = plm_fit
+  ),
+  output = "kableExtra",
+  stars = TRUE,
+  shape = term ~ model + statistic,
+  gof_omit = "RMSE"
+)
+```
+
+Warning: unable to evaluate scaled gradient  
+Warning: Model failed to converge: degenerate  Hessian with 1 negative eigenvalues

@@ -1,0 +1,41 @@
+
+\begin{table}[!htbp] \centering 
+  \caption{Regressions with seperate days} 
+  \label{} 
+\footnotesize 
+\begin{tabular}{@{\extracolsep{3pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{4}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-5} 
+\\[-1.8ex] & \multicolumn{4}{c}{Number of Arrests \vspace*{0.2cm}} \\ 
+ & in 1km radius & in 5km radius & in 10km radius & in any radius \\ 
+\hline \\[-1.8ex] 
+ Intercept & 5.542$^{**}$ & 89.712$^{***}$ & 220.705$^{***}$ & 67.792$^{***}$ \\ 
+  & (2.653) & (30.031) & (55.921) & (18.339) \\ 
+  & & & & \\ 
+ Time to Event & 0.022$^{***}$ & $-$0.013$^{***}$ & $-$0.019$^{*}$ & $-$0.027$^{***}$ \\ 
+  & (0.001) & (0.005) & (0.010) & (0.006) \\ 
+  & & & & \\ 
+ Other SQFs & 0.018$^{***}$ & 0.076$^{***}$ & 0.175$^{***}$ & 0.376$^{***}$ \\ 
+  & (0.00002) & (0.0001) & (0.0001) & (0.0001) \\ 
+  & & & & \\ 
+ After Event & 0.336$^{***}$ & $-$0.478$^{***}$ & $-$5.024$^{***}$ & $-$3.792$^{***}$ \\ 
+  & (0.010) & (0.074) & (0.162) & (0.097) \\ 
+  & & & & \\ 
+ SQF or Control & 3.759$^{***}$ & 18.239$^{***}$ & 11.171$^{***}$ & $-$27.309$^{***}$ \\ 
+  & (0.006) & (0.046) & (0.100) & (0.059) \\ 
+  & & & & \\ 
+ SQF*After & 0.140$^{***}$ & 0.035 & $-$1.686$^{***}$ & 0.898$^{***}$ \\ 
+  & (0.009) & (0.061) & (0.134) & (0.080) \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Observations & 13 455 540 & 13 455 540 & 13 455 540 & 40 366 620 \\ 
+Akaike Inf. Crit. & 90 500 616.000 & 143 392 420.000 & 164 412 158.000 & 496 077 270.000 \\ 
+Bayesian Inf. Crit. & 90 500 731.000 & 143 392 535.000 & 164 412 273.000 & 496 077 394.000 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{4}{l}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{4}{l}{All models are fitted using OLS random-effects for the 5 boroughs of New York.} \\ 
+\end{tabular} 
+\end{table} 
